@@ -53,6 +53,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Collects target references and generates an xcscheme.
@@ -93,6 +94,7 @@ class SchemeGenerator {
   private Optional<
           ImmutableMap<SchemeActionType, ImmutableMap<AdditionalActions, ImmutableList<String>>>>
       additionalSchemeActions;
+  private final boolean codeCoverageEnabled;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -116,7 +118,8 @@ class SchemeGenerator {
           additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle,
       Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
-      Optional<String> notificationPayloadFile) {
+      Optional<String> notificationPayloadFile,
+      boolean codeCoverageEnabled) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.watchInterface = watchInterface;
@@ -136,6 +139,7 @@ class SchemeGenerator {
     this.expandVariablesBasedOn = expandVariablesBasedOn;
     this.additionalSchemeActions = additionalSchemeActions;
     this.notificationPayloadFile = notificationPayloadFile;
+    this.codeCoverageEnabled = codeCoverageEnabled;
 
     LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -234,21 +238,32 @@ class SchemeGenerator {
           buildTargetToBuildableReferenceMap.get(target), buildForsForTarget(target), buildAction);
     }
 
-    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    //ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
     Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
-      envVariables = environmentVariables.get();
+      environmentVariables.get();
+      //envVariables = environmentVariables.get();
       if (expandVariablesBasedOn.isPresent()) {
         envVariablesBasedOn = expandVariablesBasedOn.get().entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToBuildableReferenceMap.get(e.getValue())));
       }
     }
 
+    ImmutableMap<String, String> defenvmap =
+                         ImmutableMap.<String, String>builder()
+                                                 .put("FB_REFERENCE_IMAGE_DIR", "$(PROJECT_DIR)/Tests/ReferenceImages")
+                                                 .put("IMAGE_DIFF_DIR", "$(PROJECT_DIR)/Tests/FailureDiffs")
+                                                 .build();
+    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of(
+        SchemeActionType.LAUNCH, defenvmap
+    );
+
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
             Objects.requireNonNull(actionConfigNames.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.TEST)),
+            codeCoverageEnabled,
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST, AdditionalActions.PRE_SCHEME_ACTIONS, primaryBuildReference),
             additionalCommandsForSchemeAction(
@@ -256,12 +271,19 @@ class SchemeGenerator {
                 AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference));
 
-    for (PBXTarget target : orderedRunTestTargets) {
+    if (orderedRunTestTargets.isEmpty() == false) {
+      UnmodifiableIterator<PBXTarget> testTargetIterator = orderedRunTestTargets.iterator();
+      PBXTarget testTarget = testTargetIterator.next();
+      while (testTargetIterator.hasNext()) {
+      	testTarget = testTargetIterator.next();
+      }
+      // for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
-          buildTargetToBuildableReferenceMap.get(target);
+          buildTargetToBuildableReferenceMap.get(testTarget);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
+      //}
     }
 
     Optional<XCScheme.LaunchAction> launchAction = Optional.empty();
@@ -483,6 +505,10 @@ class SchemeGenerator {
     Element testActionElem = doc.createElement("TestAction");
     serializePrePostActions(doc, testAction, testActionElem);
 
+    if (testAction.getCodeCoverageEnabled()) {
+        testActionElem.setAttribute("codeCoverageEnabled", "YES");
+    }
+
     // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
@@ -506,10 +532,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Test use Launch's environment variables
-      testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      Element environmentVariablesElement =
-          serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
-      testActionElem.appendChild(environmentVariablesElement);
+      // testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      // Element environmentVariablesElement =
+      //     serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
+      // testActionElem.appendChild(environmentVariablesElement);
     }
 
     return testActionElem;
@@ -612,10 +638,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Profile use Launch's environment variables
-      profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      Element environmentVariablesElement =
-          serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
-      profileActionElem.appendChild(environmentVariablesElement);
+      // profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      // Element environmentVariablesElement =
+      //     serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
+      // profileActionElem.appendChild(environmentVariablesElement);
     }
 
     return profileActionElem;

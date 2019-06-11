@@ -1172,7 +1172,8 @@ public class WorkspaceAndProjectGenerator {
               orderedRunTestTargets,
               Optional.empty(),
               Optional.empty(),
-              Optional.empty());
+              Optional.empty(),
+              swiftBuckConfig.getCodeCoverageEnabled());
 
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
@@ -1243,7 +1244,8 @@ public class WorkspaceAndProjectGenerator {
               orderedRunTestTargets,
               runnablePath,
               remoteRunnablePath,
-              expandVariablesBasedOn);
+              expandVariablesBasedOn,
+              swiftBuckConfig.getCodeCoverageEnabled());
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -1260,7 +1262,9 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedRunTestTargets,
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
-      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn) {
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn,
+      boolean codeCoverageEnabled) {
+
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
     Optional<
@@ -1300,6 +1304,7 @@ public class WorkspaceAndProjectGenerator {
         additionalSchemeActions,
         launchStyle,
         watchInterface,
-        notificationPayloadFile);
+        notificationPayloadFile,
+        codeCoverageEnabled);
   }
 }
