@@ -75,6 +75,7 @@ class XctoolRunTestsStep implements Step {
       Executors.newSingleThreadScheduledExecutor();
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
   private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
+  private static final String IMAGE_DIFF_DIR = "IMAGE_DIFF_DIR";
 
   private final ProjectFilesystem filesystem;
 
@@ -97,6 +98,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<String> logLevel;
   private final Optional<Long> timeoutInMs;
   private final Optional<String> snapshotReferenceImagesPath;
+  private final Optional<String> snapshotImagesDiffPath;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -171,7 +173,8 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<String> snapshotReferenceImagesPath) {
+      Optional<String> snapshotReferenceImagesPath,
+      Optional<String> snapshotImagesDiffPath) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty()
             && appTestBundleToHostAppPaths.isEmpty()
@@ -204,6 +207,7 @@ class XctoolRunTestsStep implements Step {
     this.logLevel = logLevel;
     this.timeoutInMs = timeoutInMs;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.snapshotImagesDiffPath = snapshotImagesDiffPath;
   }
 
   @Override
@@ -231,6 +235,9 @@ class XctoolRunTestsStep implements Step {
     if (snapshotReferenceImagesPath.isPresent()) {
       environment.put(
           XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR, snapshotReferenceImagesPath.get());
+    }
+    if (snapshotImagesDiffPath.isPresent()) {
+      environment.put(XCTOOL_ENV_VARIABLE_PREFIX + IMAGE_DIFF_DIR, snapshotImagesDiffPath.get());
     }
 
     environment.putAll(this.environmentOverrides);

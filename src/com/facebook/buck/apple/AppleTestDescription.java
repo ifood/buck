@@ -381,6 +381,7 @@ public class AppleTestDescription
                     .getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath(),
+        args.getSnapshotImagesDiffPath(),
         args.getEnv(),
         appleConfig.useIdb(),
         appleConfig.getIdbPath());
@@ -714,6 +715,9 @@ public class AppleTestDescription
 
     // for use with FBSnapshotTestcase, injects the path as FB_REFERENCE_IMAGE_DIR
     Optional<Either<SourcePath, String>> getSnapshotReferenceImagesPath();
+
+    // for use with FBSnapshotTestcase, injects the path as IMAGE_DIFF_DIR
+    Optional<Either<SourcePath, String>> getSnapshotImagesDiffPath();
 
     // Bundle related fields.
     ImmutableMap<String, String> getDestinationSpecifier();
