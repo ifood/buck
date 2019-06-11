@@ -126,6 +126,12 @@ public class XcodeprojSerializer {
     Objects.requireNonNull(currentObject).put(name, array);
   }
 
+  public void addSingleArrayField(String name, String objectList) {
+    NSArray array = new NSArray(1);
+    array.setValue(0, new NSString(objectList));
+    Objects.requireNonNull(currentObject).put(name, array);
+  }
+
   public void addField(String name, NSObject v) {
     Objects.requireNonNull(currentObject).put(name, v);
   }

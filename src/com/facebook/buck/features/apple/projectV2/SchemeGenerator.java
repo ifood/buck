@@ -53,6 +53,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Collects target references and generates an xcscheme.
@@ -93,8 +94,10 @@ class SchemeGenerator {
   private Optional<
           ImmutableMap<SchemeActionType, ImmutableMap<AdditionalActions, ImmutableList<String>>>>
       additionalSchemeActions;
+
   private final Optional<String> applicationLanguage;
   private final Optional<String> applicationRegion;
+  private final boolean codeCoverageEnabled;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -120,7 +123,8 @@ class SchemeGenerator {
       Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
       Optional<String> notificationPayloadFile,
       Optional<String> applicationLanguage,
-      Optional<String> applicationRegion) {
+      Optional<String> applicationRegion,
+      boolean codeCoverageEnabled) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.watchInterface = watchInterface;
@@ -142,6 +146,7 @@ class SchemeGenerator {
     this.notificationPayloadFile = notificationPayloadFile;
     this.applicationLanguage = applicationLanguage;
     this.applicationRegion = applicationRegion;
+    this.codeCoverageEnabled = codeCoverageEnabled;
 
     LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -255,6 +260,7 @@ class SchemeGenerator {
             Objects.requireNonNull(actionConfigNames.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.TEST)),
+            codeCoverageEnabled,
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST, AdditionalActions.PRE_SCHEME_ACTIONS, primaryBuildReference),
             additionalCommandsForSchemeAction(
@@ -264,13 +270,13 @@ class SchemeGenerator {
             applicationLanguage,
             applicationRegion);
 
-    for (PBXTarget target : orderedRunTestTargets) {
+      for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
           buildTargetToBuildableReferenceMap.get(target);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
-    }
+      }
 
     Optional<XCScheme.LaunchAction> launchAction = Optional.empty();
     Optional<XCScheme.ProfileAction> profileAction = Optional.empty();
@@ -492,6 +498,10 @@ class SchemeGenerator {
   public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
     Element testActionElem = doc.createElement("TestAction");
     serializePrePostActions(doc, testAction, testActionElem);
+
+    if (testAction.getCodeCoverageEnabled()) {
+        testActionElem.setAttribute("codeCoverageEnabled", "YES");
+    }
 
     // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");

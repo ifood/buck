@@ -1161,19 +1161,31 @@ public class WorkspaceAndProjectGenerator {
               .toPath(rootCell.getFilesystem().getFileSystem())
               .resolve(project.getName() + ".xcodeproj");
 
+      // attempt to find a suitable primary target inside the project's targets
+      // the primary target is used by SchemeGenerator for launch/profile actions
+
+      Optional<PBXTarget> primaryTarget = Optional.empty();
+      for (PBXTarget target : project.getTargets()) {
+        if (target.getIsMainRunDestination()) {
+          primaryTarget = Optional.of(target);
+          break;
+        }
+      }
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
               projectOutputDirectory,
               schemeName,
-              Optional.empty(),
+              primaryTarget,
               Optional.empty(),
               orderedBuildTargets,
               orderedBuildTestTargets,
               orderedRunTestTargets,
               Optional.empty(),
               Optional.empty(),
-              Optional.empty());
+              Optional.empty(),
+              swiftBuckConfig.getCodeCoverageEnabled());
 
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
@@ -1244,7 +1256,8 @@ public class WorkspaceAndProjectGenerator {
               orderedRunTestTargets,
               runnablePath,
               remoteRunnablePath,
-              expandVariablesBasedOn);
+              expandVariablesBasedOn,
+              swiftBuckConfig.getCodeCoverageEnabled());
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -1261,7 +1274,9 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedRunTestTargets,
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
-      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn) {
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn,
+      boolean codeCoverageEnabled) {
+
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
     Optional<
@@ -1307,6 +1322,7 @@ public class WorkspaceAndProjectGenerator {
         watchInterface,
         notificationPayloadFile,
         applicationLanguage,
-        applicationRegion);
+        applicationRegion,
+        codeCoverageEnabled);
   }
 }

@@ -72,7 +72,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -102,10 +101,10 @@ import org.kohsuke.args4j.Option;
 public class InstallCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(InstallCommand.class);
-  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
+  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 60000;
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
-  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 8";
+  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
       ImmutableInstallResult.of(ExitCode.RUN_ERROR, Optional.empty());
@@ -949,31 +948,10 @@ public class InstallCommand extends BuildCommand {
       return FAILURE;
     }
 
-    UnixUserIdFetcher userIdFetcher = new UnixUserIdFetcher();
     AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
         new AppleCoreSimulatorServiceController(processExecutor);
 
-    Optional<Path> coreSimulatorServicePath =
-        appleCoreSimulatorServiceController.getCoreSimulatorServicePath(userIdFetcher);
-
     boolean shouldWaitForSimulatorsToShutdown = false;
-
-    if (!coreSimulatorServicePath.isPresent()
-        || !coreSimulatorServicePath
-            .get()
-            .toRealPath()
-            .startsWith(xcodeDeveloperPath.get().toRealPath())) {
-      LOG.warn(
-          "Core simulator service path %s does not match developer directory %s, "
-              + "killing all simulators.",
-          coreSimulatorServicePath, xcodeDeveloperPath.get());
-      if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
-        params.getConsole().printBuildFailure("Could not kill running simulator processes.");
-        return FAILURE;
-      }
-
-      shouldWaitForSimulatorsToShutdown = true;
-    }
 
     Path simctlPath = xcodeDeveloperPath.get().resolve("usr/bin/simctl");
     Optional<AppleSimulator> appleSimulator =

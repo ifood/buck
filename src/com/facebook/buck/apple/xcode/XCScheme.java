@@ -371,6 +371,7 @@ public class XCScheme {
   public static class TestAction extends SchemeAction {
     List<TestableReference> testables;
     private final String buildConfiguration;
+    private final boolean codeCoverageEnabled;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
     private final Optional<BuildableReference> expandVariablesBasedOn;
     private final Optional<String> applicationLanguage;
@@ -380,6 +381,7 @@ public class XCScheme {
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
         Optional<BuildableReference> expandVariablesBasedOn,
+        boolean codeCoverageEnabled,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions,
         Optional<String> applicationLanguage,
@@ -391,6 +393,7 @@ public class XCScheme {
       this.expandVariablesBasedOn = expandVariablesBasedOn;
       this.applicationLanguage = applicationLanguage;
       this.applicationRegion = applicationRegion;
+      this.codeCoverageEnabled = codeCoverageEnabled;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -419,6 +422,10 @@ public class XCScheme {
 
     public Optional<String> getApplicationRegion() {
       return applicationRegion;
+    }
+
+    public boolean getCodeCoverageEnabled() {
+      return codeCoverageEnabled;
     }
   }
 

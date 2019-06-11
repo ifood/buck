@@ -83,9 +83,17 @@ public final class PBXProject extends PBXContainer {
     s.addField("targets", targets);
     s.addField("buildConfigurationList", buildConfigurationList);
     s.addField("compatibilityVersion", compatibilityVersion);
+    //TODO: Make this configurable
+    s.addField("developmentRegion", "pt-BR");
 
     NSDictionary d = new NSDictionary();
     d.put("LastUpgradeCheck", "9999");
+    NSDictionary dev = new NSDictionary();
+    dev.put("DevelopmentTeam", "U7KHKH9L7R");
+    dev.put("ProvisioningStyle", "Manual");
+    NSDictionary tA = new NSDictionary();
+    tA.put("E66DC04ECA074AD000000000", dev);
+    d.put("TargetAttributes", tA);
 
     s.addField("attributes", d);
   }
