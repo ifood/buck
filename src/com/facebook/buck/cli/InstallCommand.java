@@ -101,7 +101,7 @@ import org.kohsuke.args4j.Option;
 public class InstallCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(InstallCommand.class);
-  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
+  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 60000;
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 8";
