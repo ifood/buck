@@ -84,7 +84,6 @@ public class PBXProject extends PBXContainer {
     s.addField("compatibilityVersion", compatibilityVersion);
     //TODO: Make this configurable
     s.addField("developmentRegion", "pt-BR");
-    s.addSingleArrayField("knownRegions", "pt-BR");
 
     NSDictionary d = new NSDictionary();
     d.put("LastUpgradeCheck", "9999");
