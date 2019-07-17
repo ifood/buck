@@ -34,6 +34,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
+  public static final String CODE_COVERAGE_ENABLED = "code_coverage_enabled";
   private final BuckConfig delegate;
 
   @Override
@@ -113,5 +114,9 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getEmitSwiftdocs() {
     return delegate.getBooleanValue(SECTION_NAME, EMIT_SWIFTDOCS, false);
+  }
+
+  public boolean getCodeCoverageEnabled() {
+    return delegate.getBooleanValue(SECTION_NAME, CODE_COVERAGE_ENABLED, false);
   }
 }
