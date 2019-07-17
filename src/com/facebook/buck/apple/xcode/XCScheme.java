@@ -342,17 +342,20 @@ public class XCScheme {
   public static class TestAction extends SchemeAction {
     List<TestableReference> testables;
     private final String buildConfiguration;
+    private final boolean codeCoverageEnabled;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
 
     public TestAction(
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        boolean codeCoverageEnabled,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions) {
       super(preActions, postActions);
       this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
+      this.codeCoverageEnabled = codeCoverageEnabled;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -369,6 +372,10 @@ public class XCScheme {
 
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
+    }
+
+    public boolean getCodeCoverageEnabled() {
+      return codeCoverageEnabled;
     }
   }
 

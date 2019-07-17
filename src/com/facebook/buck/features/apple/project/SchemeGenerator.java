@@ -91,6 +91,7 @@ class SchemeGenerator {
           ImmutableMap<
               SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
       additionalSchemeActions;
+  private final boolean codeCoverageEnabled;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -114,7 +115,8 @@ class SchemeGenerator {
           additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle,
       Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
-      Optional<String> notificationPayloadFile) {
+      Optional<String> notificationPayloadFile,
+      boolean codeCoverageEnabled) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.watchInterface = watchInterface;
@@ -133,6 +135,7 @@ class SchemeGenerator {
     this.environmentVariables = environmentVariables;
     this.additionalSchemeActions = additionalSchemeActions;
     this.notificationPayloadFile = notificationPayloadFile;
+    this.codeCoverageEnabled = codeCoverageEnabled;
 
     LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -244,6 +247,7 @@ class SchemeGenerator {
         new XCScheme.TestAction(
             Objects.requireNonNull(actionConfigNames.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
+            codeCoverageEnabled,
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST, AdditionalActions.PRE_SCHEME_ACTIONS, primaryBuildReference),
             additionalCommandsForSchemeAction(
@@ -425,7 +429,9 @@ class SchemeGenerator {
   public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
     Element testActionElem = doc.createElement("TestAction");
     serializePrePostActions(doc, testAction, testActionElem);
-
+    if (testAction.getCodeCoverageEnabled()) {
+      testActionElem.setAttribute("codeCoverageEnabled", "YES");
+    }
     // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
