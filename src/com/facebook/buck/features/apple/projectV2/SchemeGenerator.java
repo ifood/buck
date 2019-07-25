@@ -53,6 +53,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import com.google.common.collect.UnmodifiableIterator;
 
 /**
  * Collects target references and generates an xcscheme.
@@ -240,12 +241,22 @@ class SchemeGenerator {
     ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
     Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
-      envVariables = environmentVariables.get();
+      environmentVariables.get();
+      //envVariables = environmentVariables.get();
       if (expandVariablesBasedOn.isPresent()) {
         envVariablesBasedOn = expandVariablesBasedOn.get().entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToBuildableReferenceMap.get(e.getValue())));
       }
     }
+
+    ImmutableMap<String, String> defenvmap =
+                         ImmutableMap.<String, String>builder()
+                                                 .put("FB_REFERENCE_IMAGE_DIR", "$(SOURCE_ROOT)/Tests/ReferenceImages")
+                                                 .put("IMAGE_DIFF_DIR", "$(SOURCE_ROOT)/Tests/FailureDiffs")
+                                                 .build();
+    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of(
+        SchemeActionType.LAUNCH, defenvmap
+    );
 
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
@@ -260,12 +271,19 @@ class SchemeGenerator {
                 AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference));
 
-    for (PBXTarget target : orderedRunTestTargets) {
+    if (orderedRunTestTargets.isEmpty() == false) {
+      UnmodifiableIterator<PBXTarget> testTargetIterator = orderedRunTestTargets.iterator();
+      PBXTarget testTarget = testTargetIterator.next();
+      while (testTargetIterator.hasNext()) {
+      	testTarget = testTargetIterator.next();
+      }
+      // for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
-          buildTargetToBuildableReferenceMap.get(target);
+          buildTargetToBuildableReferenceMap.get(testTarget);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
+      //}
     }
 
     Optional<XCScheme.LaunchAction> launchAction = Optional.empty();
@@ -514,10 +532,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Test use Launch's environment variables
-      testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      Element environmentVariablesElement =
-          serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
-      testActionElem.appendChild(environmentVariablesElement);
+      // testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      // Element environmentVariablesElement =
+      //     serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
+      // testActionElem.appendChild(environmentVariablesElement);
     }
 
     return testActionElem;
@@ -620,10 +638,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Profile use Launch's environment variables
-      profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      Element environmentVariablesElement =
-          serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
-      profileActionElem.appendChild(environmentVariablesElement);
+      // profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      // Element environmentVariablesElement =
+      //     serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
+      // profileActionElem.appendChild(environmentVariablesElement);
     }
 
     return profileActionElem;
