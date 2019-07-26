@@ -46,6 +46,10 @@ class MissingPathsChecker implements PathsChecker {
         continue;
       }
 
+      if (path.toAbsolutePath().toString().endsWith("ReferenceImages") || path.toAbsolutePath().toString().endsWith("FailureDiffs")) {
+        continue;
+      }
+
       try {
         projectFilesystem.readAttributes(path, BasicFileAttributes.class);
       } catch (NoSuchFileException e) {
