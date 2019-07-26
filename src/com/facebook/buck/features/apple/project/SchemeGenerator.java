@@ -256,8 +256,8 @@ class SchemeGenerator {
 
       ImmutableMap<String, String> defenvmap =  
                          ImmutableMap.<String, String>builder() 
-                                                 .put("FB_REFERENCE_IMAGE_DIR", "$(SOURCE_ROOT)/Tests/ReferenceImages") 
-                                                 .put("IMAGE_DIFF_DIR", "$(SOURCE_ROOT)/Tests/FailureDiffs")
+                                                 .put("FB_REFERENCE_IMAGE_DIR", "$(PROJECT_DIR)/Tests/ReferenceImages") 
+                                                 .put("IMAGE_DIFF_DIR", "$(PROJECT_DIR)/Tests/FailureDiffs")
                                                  .build();
       ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of(
         SchemeActionType.LAUNCH, defenvmap
