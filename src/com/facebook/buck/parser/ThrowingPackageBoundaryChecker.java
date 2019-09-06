@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
@@ -59,7 +58,6 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
     }
 
     BuildFileTree buildFileTree = buildFileTrees.getUnchecked(targetCell);
-    boolean isBasePathEmpty = basePath.isEmpty();
 
     for (ForwardRelativePath path : paths) {
 

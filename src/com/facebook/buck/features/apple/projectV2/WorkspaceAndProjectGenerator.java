@@ -858,6 +858,70 @@ public class WorkspaceAndProjectGenerator {
     }
   }
 
+  /**
+   * Create individual schemes for each project and associated tests. Provided as a workaround for a
+   * change in Xcode 10 where Apple started building all scheme targets and tests when clicking on a
+   * single item from the test navigator. These schemes will be written inside of the xcodeproj.
+   *
+   * @param xcodeProjectWriteOptions The project data
+   * @param generatedTargets The targets that were generated for this project
+   * @param schemeTargets Targets to be considered for scheme. Allows external filtering of targets
+   *     included in the project's scheme.
+   * @param targetToProjectPathMap
+   * @param buildForTestTargets
+   * @param ungroupedTestTargets
+   * @throws IOException
+   */
+  private void writeWorkspaceSchemesForProjects(
+      XcodeProjectWriteOptions xcodeProjectWriteOptions,
+      ImmutableSet<PBXTarget> generatedTargets,
+      ImmutableSet<PBXTarget> schemeTargets,
+      ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
+      ImmutableSetMultimap<String, PBXTarget> buildForTestTargets,
+      ImmutableSetMultimap<String, PBXTarget> ungroupedTestTargets)
+      throws IOException {
+
+    PBXProject project = xcodeProjectWriteOptions.project();
+    String schemeName = project.getName();
+
+    ImmutableSet<PBXTarget> orderedBuildTestTargets =
+        generatedTargets.stream()
+            .filter(pbxTarget -> buildForTestTargets.values().contains(pbxTarget))
+            .collect(ImmutableSet.toImmutableSet());
+
+    ImmutableSet<PBXTarget> orderedRunTestTargets =
+        generatedTargets.stream()
+            .filter(pbxTarget -> ungroupedTestTargets.values().contains(pbxTarget))
+            .collect(ImmutableSet.toImmutableSet());
+
+    // add all non-test targets as full build targets
+    ImmutableSet<PBXTarget> orderedBuildTargets =
+        generatedTargets.stream()
+            .filter(pbxTarget -> schemeTargets.contains(pbxTarget))
+            .filter(pbxTarget -> !orderedBuildTestTargets.contains(pbxTarget))
+            .collect(ImmutableSet.toImmutableSet());
+
+    // generate scheme inside xcodeproj
+    Path projectOutputDirectory = xcodeProjectWriteOptions.xcodeProjPath();
+
+    SchemeGenerator schemeGenerator =
+        buildSchemeGenerator(
+            targetToProjectPathMap,
+            projectOutputDirectory,
+            schemeName,
+            Optional.empty(),
+            Optional.empty(),
+            orderedBuildTargets,
+            orderedBuildTestTargets,
+            orderedRunTestTargets,
+            Optional.empty(),
+            Optional.empty(),
+            swiftBuckConfig.getCodeCoverageEnabled());
+
+    schemeGenerator.writeScheme();
+    schemeGenerators.put(schemeName, schemeGenerator);
+  }
+
   private void writeWorkspaceSchemes(
       String workspaceName,
       Path outputDirectory,
@@ -910,7 +974,8 @@ public class WorkspaceAndProjectGenerator {
               orderedBuildTestTargets,
               orderedRunTestTargets,
               runnablePath,
-              remoteRunnablePath);
+              remoteRunnablePath,
+              swiftBuckConfig.getCodeCoverageEnabled());
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -926,7 +991,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedBuildTestTargets,
       ImmutableSet<PBXTarget> orderedRunTestTargets,
       Optional<String> runnablePath,
-      Optional<String> remoteRunnablePath) {
+      Optional<String> remoteRunnablePath,
+      boolean codeCoverageEnabled) {
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
     Optional<
@@ -965,6 +1031,7 @@ public class WorkspaceAndProjectGenerator {
         additionalSchemeActions,
         launchStyle,
         watchInterface,
-        notificationPayloadFile);
+        notificationPayloadFile,
+        codeCoverageEnabled);
   }
 }
