@@ -239,13 +239,14 @@ class SchemeGenerator {
       //envVariables = environmentVariables.get();
     }
 
-    ImmutableMap<String, String> defenvmap =
+    ImmutableMap<String, String> testEnvMap =
                          ImmutableMap.<String, String>builder()
                                                  .put("FB_REFERENCE_IMAGE_DIR", "$(PROJECT_DIR)/Tests/ReferenceImages")
                                                  .put("IMAGE_DIFF_DIR", "$(PROJECT_DIR)/Tests/FailureDiffs")
+                                                 .put("IS_RUNNING_TESTS", "YES")
                                                  .build();
     ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of(
-        SchemeActionType.LAUNCH, defenvmap
+        SchemeActionType.TEST, testEnvMap
     );
 
     XCScheme.TestAction testAction =
@@ -480,7 +481,8 @@ class SchemeGenerator {
     return buildActionElem;
   }
 
-  public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
+  public static Element serializeTestAction(
+    Document doc, XCScheme.TestAction testAction, Optional<XCScheme.LaunchAction> launchAction) {
     Element testActionElem = doc.createElement("TestAction");
     serializePrePostActions(doc, testAction, testActionElem);
 
@@ -504,11 +506,19 @@ class SchemeGenerator {
     }
 
     if (testAction.getEnvironmentVariables().isPresent()) {
-      // disable the default override that makes Test use Launch's environment variables
-      // testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      // Element environmentVariablesElement =
-      //     serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
-      // testActionElem.appendChild(environmentVariablesElement);
+      testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+
+      if (launchAction.isPresent()) {
+        Element macroExpansionElem = doc.createElement("MacroExpansion");
+        testActionElem.appendChild(macroExpansionElem);
+
+        Element refElem = serializeBuildableReference(doc, launchAction.get().getBuildableReference());
+        macroExpansionElem.appendChild(refElem);
+      }
+
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
+      testActionElem.appendChild(environmentVariablesElement);
     }
 
     return testActionElem;
@@ -598,11 +608,10 @@ class SchemeGenerator {
     productRunnableElem.appendChild(refElem);
 
     if (profileAction.getEnvironmentVariables().isPresent()) {
-      // disable the default override that makes Profile use Launch's environment variables
-      // profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      // Element environmentVariablesElement =
-      //     serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
-      // profileActionElem.appendChild(environmentVariablesElement);
+      profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
+      profileActionElem.appendChild(environmentVariablesElement);
     }
 
     return profileActionElem;
@@ -679,14 +688,6 @@ class SchemeGenerator {
       rootElem.appendChild(buildActionElem);
     }
 
-    Optional<XCScheme.TestAction> testAction = scheme.getTestAction();
-    if (testAction.isPresent()) {
-      Element testActionElem = serializeTestAction(doc, testAction.get());
-      testActionElem.setAttribute(
-          "buildConfiguration", scheme.getTestAction().get().getBuildConfiguration());
-      rootElem.appendChild(testActionElem);
-    }
-
     Optional<XCScheme.LaunchAction> launchAction = scheme.getLaunchAction();
     if (launchAction.isPresent()) {
       Element launchActionElem = serializeLaunchAction(doc, launchAction.get());
@@ -697,6 +698,14 @@ class SchemeGenerator {
       Element launchActionElem = doc.createElement("LaunchAction");
       launchActionElem.setAttribute("buildConfiguration", "Debug");
       rootElem.appendChild(launchActionElem);
+    }
+
+    Optional<XCScheme.TestAction> testAction = scheme.getTestAction();
+    if (testAction.isPresent()) {
+      Element testActionElem = serializeTestAction(doc, testAction.get(), launchAction);
+      testActionElem.setAttribute(
+          "buildConfiguration", scheme.getTestAction().get().getBuildConfiguration());
+      rootElem.appendChild(testActionElem);
     }
 
     Optional<XCScheme.ProfileAction> profileAction = scheme.getProfileAction();
