@@ -1172,6 +1172,7 @@ public class WorkspaceAndProjectGenerator {
               orderedRunTestTargets,
               Optional.empty(),
               Optional.empty(),
+              Optional.empty(),
               swiftBuckConfig.getCodeCoverageEnabled());
 
       schemeGenerator.writeScheme();

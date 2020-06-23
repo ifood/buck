@@ -51,7 +51,7 @@ class MissingPathsChecker implements PathsChecker {
         continue;
       }
 
-      if (path.toAbsolutePath().toString().endsWith("ReferenceImages") || path.toAbsolutePath().toString().endsWith("FailureDiffs")) {
+      if (path.toString().endsWith("ReferenceImages") || path.toString().endsWith("FailureDiffs")) {
         continue;
       }
 

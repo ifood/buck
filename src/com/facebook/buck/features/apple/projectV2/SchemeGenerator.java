@@ -238,7 +238,7 @@ class SchemeGenerator {
           buildTargetToBuildableReferenceMap.get(target), buildForsForTarget(target), buildAction);
     }
 
-    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    //ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
     Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
       environmentVariables.get();

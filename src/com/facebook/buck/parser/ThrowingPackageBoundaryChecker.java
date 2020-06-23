@@ -37,7 +37,6 @@ import java.util.Optional;
 public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
-  private static final Logger LOG = Logger.get(ThrowingPackageBoundaryChecker.class);
 
   public ThrowingPackageBoundaryChecker(LoadingCache<Cell, BuildFileTree> buildFileTrees) {
     this.buildFileTrees = buildFileTrees;
@@ -59,7 +58,6 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
     }
 
     BuildFileTree buildFileTree = buildFileTrees.getUnchecked(targetCell);
-    boolean isBasePathEmpty = basePath.isEmpty();
 
     for (ForwardRelativePath path : paths) {
       Optional<RelPath> ancestor =
@@ -77,17 +75,6 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                     + "More info at:\nhttps://buck.build/about/overview.html\n",
                 target, path));
       }
-    }
-  }
-
-  private static void warnOrError(
-      ParserConfig.PackageBoundaryEnforcement enforcing,
-      String formatString,
-      Object... formatArgs) {
-    if (enforcing == ParserConfig.PackageBoundaryEnforcement.ENFORCE) {
-      throw new HumanReadableException(formatString, formatArgs);
-    } else {
-      LOG.warn(formatString, formatArgs);
     }
   }
 }

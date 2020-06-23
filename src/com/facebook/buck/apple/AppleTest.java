@@ -376,19 +376,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               testRuleTimeoutMs,
               snapshotReferenceImagesPath,
               snapshotImagesDiffPath);
-      ImmutableList<IdbRunTestsStep> idbSteps =
-          IdbRunTestsStep.createCommands(
-              idbPath,
-              getProjectFilesystem(),
-              testBundle,
-              resolvedTestOutputPath,
-              idbStdoutReader,
-              options.getTestSelectorList(),
-              stutterTimeout,
-              testRuleTimeoutMs,
-              logicTestPathsBuilder.build(),
-              appTestPathsToHostAppsBuilder.build(),
-              appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build());
 
       if (useIdb) {
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
