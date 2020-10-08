@@ -243,25 +243,16 @@ class SchemeGenerator {
           buildAction);
     }
 
-    //ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
     Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
       environmentVariables.get();
-      //envVariables = environmentVariables.get();
+      envVariables = environmentVariables.get();
       if (expandVariablesBasedOn.isPresent()) {
         envVariablesBasedOn = expandVariablesBasedOn.get().entrySet().stream()
           .collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToBuildableReferenceMap.get(e.getValue())));
       }
     }
-
-      ImmutableMap<String, String> defenvmap =  
-                         ImmutableMap.<String, String>builder() 
-                                                 .put("FB_REFERENCE_IMAGE_DIR", "$(PROJECT_DIR)/Tests/ReferenceImages") 
-                                                 .put("IMAGE_DIFF_DIR", "$(PROJECT_DIR)/Tests/FailureDiffs")
-                                                 .build();
-      ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of(
-        SchemeActionType.LAUNCH, defenvmap
-      );
 
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(

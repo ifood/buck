@@ -75,6 +75,7 @@ class XctoolRunTestsStep implements Step {
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
   private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
   private static final String IMAGE_DIFF_DIR = "IMAGE_DIFF_DIR";
+  private static final String SNAPSHOTS_BASE_DIR = "SNAPSHOTS_BASE_DIR";
 
   private final ProjectFilesystem filesystem;
 
@@ -98,6 +99,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<Long> timeoutInMs;
   private final Optional<String> snapshotReferenceImagesPath;
   private final Optional<String> snapshotImagesDiffPath;
+  private final Optional<String> snapshotsBaseDir;
   private final Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths;
   private final boolean isUsingXCodeBuildTool;
 
@@ -175,7 +177,8 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
       Optional<String> snapshotReferenceImagesPath,
-      Optional<String> snapshotImagesDiffPath) {
+      Optional<String> snapshotImagesDiffPath,
+      Optional<String> snapshotsBaseDir) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty()
             && appTestBundleToHostAppPaths.isEmpty()
@@ -211,6 +214,7 @@ class XctoolRunTestsStep implements Step {
     this.timeoutInMs = timeoutInMs;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
     this.snapshotImagesDiffPath = snapshotImagesDiffPath;
+    this.snapshotsBaseDir = snapshotsBaseDir;
     // Super hacky, but xcodebuildtool is an alternative wrapper
     // around xcodebuild and forwarding the -f arguments only makes
     // sense in that context.
@@ -245,6 +249,10 @@ class XctoolRunTestsStep implements Step {
     }
     if (snapshotImagesDiffPath.isPresent()) {
       environment.put(XCTOOL_ENV_VARIABLE_PREFIX + IMAGE_DIFF_DIR, snapshotImagesDiffPath.get());
+    }
+
+    if (snapshotsBaseDir.isPresent()) {
+      environment.put(XCTOOL_ENV_VARIABLE_PREFIX + SNAPSHOTS_BASE_DIR, snapshotsBaseDir.get());
     }
 
     environment.putAll(this.environmentOverrides);

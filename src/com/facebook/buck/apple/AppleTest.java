@@ -283,6 +283,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path pathToTestOutput = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
 
+
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -375,7 +376,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
               snapshotReferenceImagesPath,
-              snapshotImagesDiffPath);
+              snapshotImagesDiffPath,
+              Optional.of(getProjectFilesystem().resolve(".").toString()));
 
       if (useIdb) {
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
