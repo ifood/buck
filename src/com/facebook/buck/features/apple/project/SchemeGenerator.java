@@ -267,20 +267,14 @@ class SchemeGenerator {
                 AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference));
 
-    if (orderedRunTestTargets.isEmpty() == false) {
-    UnmodifiableIterator<PBXTarget> testTargetIterator = orderedRunTestTargets.iterator();
-    PBXTarget testTarget = testTargetIterator.next();
-    while (testTargetIterator.hasNext()) {
-      testTarget = testTargetIterator.next();
-    }
-    // for (PBXTarget target : orderedRunTestTargets) {
+    for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
-          buildTargetToBuildableReferenceMap.get(testTarget);
+          buildTargetToBuildableReferenceMap.get(target);
       XCScheme.TestableReference testableReference =
           new XCScheme.TestableReference(buildableReference);
       testAction.addTestableReference(testableReference);
-    // }
-}
+    }
+
     Optional<XCScheme.LaunchAction> launchAction = Optional.empty();
     Optional<XCScheme.ProfileAction> profileAction = Optional.empty();
 
@@ -483,10 +477,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Test use Launch's environment variables
-      //testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      // Element environmentVariablesElement =
-      //     serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
-      // testActionElem.appendChild(environmentVariablesElement);
+      testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
+      testActionElem.appendChild(environmentVariablesElement);
     }
 
     return testActionElem;
@@ -589,10 +583,10 @@ class SchemeGenerator {
       }
 
       // disable the default override that makes Profile use Launch's environment variables
-      // profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
-      // Element environmentVariablesElement =
-      //     serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
-      // profileActionElem.appendChild(environmentVariablesElement);
+      profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
+      profileActionElem.appendChild(environmentVariablesElement);
     }
 
     return profileActionElem;
