@@ -1160,12 +1160,23 @@ public class WorkspaceAndProjectGenerator {
               .toPath(rootCell.getFilesystem().getFileSystem())
               .resolve(project.getName() + ".xcodeproj");
 
+      // attempt to find a suitable primary target inside the project's targets
+      // the primary target is used by SchemeGenerator for launch/profile actions
+      Optional<PBXTarget> primaryTarget = Optional.empty();
+      for (PBXTarget target : project.getTargets()) {
+        String targetName = target.getName().toLowerCase();
+        if (targetName.endsWith("app") && !targetName.contains("test")) {
+          primaryTarget = Optional.of(target);
+          break;
+        }
+      }
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
               projectOutputDirectory,
               schemeName,
-              Optional.empty(),
+              primaryTarget,
               Optional.empty(),
               orderedBuildTargets,
               orderedBuildTestTargets,
