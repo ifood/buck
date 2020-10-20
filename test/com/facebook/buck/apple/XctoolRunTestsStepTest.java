@@ -693,7 +693,7 @@ public class XctoolRunTestsStepTest {
             Optional.of("verbose"),
             Optional.empty(),
             Optional.of("/path/to/snapshotimages"),
-            Optional.of("/path/to/snapshotfailurediffs"));
+            Optional.of("/path/to/snapshotdiffimages"));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -710,13 +710,13 @@ public class XctoolRunTestsStepTest {
             // with a matching environment will the test pass.
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
-                    .put("DEVELOPER_DIR", "/path/to/developer/dir")
-                    .put("XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs")
-                    .put("XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose")
-                    .put("XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages")
-                    .put("XCTOOL_TEST_ENV_IMAGE_DIFF_DIR", "/path/to/snapshotfailurediffs")
-                    .put("LLVM_PROFILE_FILE", "/tmp/some.profraw")
-                    .build())
+                  .put("DEVELOPER_DIR", "/path/to/developer/dir")
+                  .put("XCTOOL_TEST_ENV_TEST_LOG_PATH", "/path/to/test-logs")
+                  .put("XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose")
+                  .put("XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages")
+                  .put("XCTOOL_TEST_ENV_IMAGE_DIFF_DIR", "/path/to/snapshotdiffimages")
+                  .put("LLVM_PROFILE_FILE", "/tmp/some.profraw")
+                .build())
             .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
