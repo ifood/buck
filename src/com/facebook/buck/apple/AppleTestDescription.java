@@ -421,6 +421,7 @@ public class AppleTestDescription
               AppleDeveloperDirectoryForTestsProvider.class),
           args.getIsUiTest(),
           args.getSnapshotReferenceImagesPath(),
+          args.getSnapshotImagesDiffPath(),
           appleConfig.useIdb(),
           appleConfig.getIdbPath());
     }

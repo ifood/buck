@@ -349,10 +349,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
 
-      Optional<String> snapshotReferenceImagesPath =
-          getAbsoluteSnapshotTestingArgumentPath(this.snapshotReferenceImagesPath, buildContext);
-      Optional<String> snapshotImagesDiffPath =
-          getAbsoluteSnapshotTestingArgumentPath(this.snapshotImagesDiffPath, buildContext);
+      Optional<String> snapshotReferenceImagesPath = getAbsoluteSnapshotTestingArgumentPath(this.snapshotReferenceImagesPath, buildContext);
+      Optional<String> snapshotImagesDiffPath = getAbsoluteSnapshotTestingArgumentPath(this.snapshotImagesDiffPath, buildContext);
 
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
@@ -450,19 +448,19 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Optional<String> getAbsoluteSnapshotTestingArgumentPath(
-      Optional<Either<SourcePath, String>> snapshotTestArgument, BuildContext buildContext) {
+    Optional<Either<SourcePath, String>> snapshotTestArgument, BuildContext buildContext) {
     if (snapshotTestArgument.isPresent()) {
       if (snapshotTestArgument.get().isLeft()) {
         return Optional.of(
-            buildContext
-                .getSourcePathResolver()
-                .getAbsolutePath(snapshotTestArgument.get().getLeft())
-                .toString());
+          buildContext
+            .getSourcePathResolver()
+            .getAbsolutePath(snapshotTestArgument.get().getLeft())
+            .toString());
       } else if (snapshotTestArgument.get().isRight()) {
         return Optional.of(
-            getProjectFilesystem()
-                .getPathForRelativePath(snapshotTestArgument.get().getRight())
-                .toString());
+          getProjectFilesystem()
+            .getPathForRelativePath(snapshotTestArgument.get().getRight())
+            .toString());
       }
     }
     return Optional.empty();
