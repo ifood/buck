@@ -31,6 +31,8 @@ public interface AppleNativeTargetDescriptionArg
   @Value.NaturalOrder
   ImmutableSortedMap<String, ImmutableMap<String, String>> getConfigs();
 
+  Optional<Boolean> getIsMainRunDestination();
+
   Optional<String> getHeaderPathPrefix();
 
   @Value.Default

@@ -2070,6 +2070,8 @@ public class ProjectGenerator {
       // Use Core Data models from immediate dependencies only.
       addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup.get());
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
+
+      target.setIsMainRunDestination(appleTargetNode.get().getConstructorArg().getIsMainRunDestination().orElse(false));
     }
 
     if (bundle.isPresent()

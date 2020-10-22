@@ -1163,8 +1163,13 @@ public class WorkspaceAndProjectGenerator {
 
       // attempt to find a suitable primary target inside the project's targets
       // the primary target is used by SchemeGenerator for launch/profile actions
+
       Optional<PBXTarget> primaryTarget = Optional.empty();
       for (PBXTarget target : project.getTargets()) {
+        if (target.getIsMainRunDestination()) {
+          primaryTarget = Optional.of(target);
+          break;
+        }
         String targetName = target.getName().toLowerCase();
         if (targetName.endsWith("app") && !targetName.contains("test")) {
           primaryTarget = Optional.of(target);

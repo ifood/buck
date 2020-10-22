@@ -31,6 +31,7 @@ public abstract class PBXTarget extends PBXProjectItem {
   @Nullable private String productName;
   @Nullable private PBXFileReference productReference;
   @Nullable private ProductType productType;
+  @Nullable private Boolean isMainRunDestination;
 
   public PBXTarget(String name, AbstractPBXObjectFactory objectFactory) {
     this.name = name;
@@ -86,6 +87,10 @@ public abstract class PBXTarget extends PBXProjectItem {
     this.productType = productType;
   }
 
+  @Nullable
+  public Boolean getIsMainRunDestination() { return isMainRunDestination; };
+
+  public void setIsMainRunDestination(@Nullable Boolean isMainRunDestination) { this.isMainRunDestination = isMainRunDestination; }
   @Override
   public String isa() {
     return "PBXTarget";
