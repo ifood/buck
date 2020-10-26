@@ -2072,6 +2072,7 @@ public class ProjectGenerator {
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
 
       target.setIsMainRunDestination(appleTargetNode.get().getConstructorArg().getIsMainRunDestination().orElse(false));
+      target.setAddToProjectScheme(appleTargetNode.get().getConstructorArg().getAddProjectSchemeTarget().orElse(true));
     }
 
     if (bundle.isPresent()

@@ -1146,6 +1146,7 @@ public class WorkspaceAndProjectGenerator {
       // add all non-test targets as full build targets
       ImmutableSet<PBXTarget> orderedBuildTargets =
           projectTargets.stream()
+              .filter(pbxTarget -> pbxTarget.getAddToProjectScheme())
               .filter(pbxTarget -> schemeTargets.contains(pbxTarget))
               .filter(pbxTarget -> !orderedBuildTestTargets.contains(pbxTarget))
               .collect(ImmutableSet.toImmutableSet());

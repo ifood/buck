@@ -33,6 +33,8 @@ public interface AppleNativeTargetDescriptionArg
 
   Optional<Boolean> getIsMainRunDestination();
 
+  Optional<Boolean> getAddProjectSchemeTarget();
+
   Optional<String> getHeaderPathPrefix();
 
   @Value.Default
