@@ -16,12 +16,20 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.io.file.MorePosixFilePermissions.READ_ONLY_FILE_ATTRIBUTE;
+
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListFormatException;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -41,6 +49,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
@@ -54,13 +63,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +82,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -268,6 +283,69 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext,
       TestRule.TestReportingCallback testReportingCallback) {
 
+//    try {
+//      InputStream empty = new ByteArrayInputStream(" ".getBytes());
+//      NSObject infoPlist = PropertyListParser.parse(empty);
+//      NSDictionary testPlistKeyValues = new NSDictionary();
+//      testPlistKeyValues.put("TestBundlePath", new NSString("__TESTROOT__/" + testBundle.getBinaryName() + ".xctest"));
+//      testPlistKeyValues.put("TestHostPath", new NSString("__TESTROOT__/"));
+
+//      String xmlfile = testPlistKeyValues.toXMLPropertyList();
+//      xmlfile.endsWith(infoPlist.toString());
+//    xmlfile.endsWith("s");
+//      testPlistKeyValues.toXMLPropertyList();
+
+
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (ParserConfigurationException e) {
+//      e.printStackTrace();
+//    } catch (SAXException e) {
+//      e.printStackTrace();
+//    } catch (PropertyListFormatException e) {
+//      e.printStackTrace();
+//    } catch (ParseException e) {
+//      e.printStackTrace();
+//    }
+//    getProjectFilesystem().writeContentsToPath("", getProjectFilesystem());
+//    String serializedInfoPlist = "".toXMLPropertyList();
+//    filesystem.writeContentsToPath(serializedInfoPlist, output);
+//
+//      entitlementsPlist =
+//        entitlementsPlistString.map(
+//          entitlementsPlistName -> {
+//            ProjectFilesystem filesystem = getProjectFilesystem();
+//            AbsPath originalEntitlementsPlist =
+//              srcRoot.resolve(Paths.get(entitlementsPlistName));
+//            Path entitlementsPlistWithSubstitutions =
+//              BuildTargetPaths.getScratchPath(
+//                filesystem, getBuildTarget(), "%s-Entitlements.plist");
+//
+//            stepsBuilder.add(
+//              new FindAndReplaceStep(
+//                filesystem,
+//                originalEntitlementsPlist,
+//                entitlementsPlistWithSubstitutions,
+//                InfoPlistSubstitution.createVariableExpansionFunction(
+//                  infoPlistSubstitutions)));
+//
+//            return filesystem.resolve(entitlementsPlistWithSubstitutions);
+//          });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ExternalTestRunnerTestSpec.Builder externalSpec =
         ExternalTestRunnerTestSpec.builder()
@@ -332,6 +410,27 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         }
       } else {
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
+      }
+
+      NSDictionary xctestRunDict = new NSDictionary();
+      xctestRunDict.put("TestBundlePath", new NSString("__TESTROOT__/" + testBundle.getBinaryName() + ".xctest"));
+      xctestRunDict.put("TestHostPath", "__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/xctest");
+
+      if (testHostAppPath.isPresent()) {
+        xctestRunDict.put("TestHostPath", testHostAppPath.get().toString());
+        if (isUiTest) {
+          xctestRunDict.put("UITargetAppPath", uiTestTargetAppPath.get().toString());
+        }
+      }
+      String xmlfile = xctestRunDict.toXMLPropertyList();
+
+      Path xctestrunPath = resolvedTestOutputPath.resolve("test" + ".xctestrun");
+
+      try {
+        getProjectFilesystem().writeContentsToPath(
+          xmlfile, xctestrunPath, READ_ONLY_FILE_ATTRIBUTE);
+      } catch (IOException e) {
+        e.printStackTrace();
       }
 
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
@@ -420,6 +519,28 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       externalSpec.setCommand(xctoolStep.getCommand());
       externalSpec.setEnv(xctoolStep.getEnv(context));
     } else {
+
+      NSDictionary xctestRunDict = new NSDictionary();
+      xctestRunDict.put("TestBundlePath", new NSString("__TESTROOT__/" + testBundle.getBinaryName() + ".xctest"));
+      xctestRunDict.put("TestHostPath", "__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/xctest");
+
+      if (testHostAppPath.isPresent()) {
+        xctestRunDict.put("TestHostPath", testHostAppPath.get().toString());
+        if (isUiTest) {
+          xctestRunDict.put("UITargetAppPath", uiTestTargetAppPath.get().toString());
+        }
+      }
+      String xmlfile = xctestRunDict.toXMLPropertyList();
+
+      Path xctestrunPath = resolvedTestOutputPath.resolve("test" + ".xctestrun");
+
+      try {
+        getProjectFilesystem().writeContentsToPath(
+          xmlfile, xctestrunPath, READ_ONLY_FILE_ATTRIBUTE);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
       xctestOutputReader = Optional.of(new AppleTestXctestOutputReader(testReportingCallback));
 
       HashMap<String, String> environment = new HashMap<>();

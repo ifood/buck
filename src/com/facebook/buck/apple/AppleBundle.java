@@ -329,6 +329,7 @@ public class AppleBundle extends AbstractBuildRule
     return getMetadataPath().resolve("Info.plist");
   }
 
+
   public Path getUnzippedOutputFilePathToBinary() {
     return this.binaryPath;
   }
@@ -343,6 +344,10 @@ public class AppleBundle extends AbstractBuildRule
 
   public Optional<BuildRule> getBinary() {
     return binary;
+  }
+
+  public String getBinaryName() {
+    return binaryName;
   }
 
   public Optional<AppleDsym> getAppleDsym() {
