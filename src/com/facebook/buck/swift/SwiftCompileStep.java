@@ -19,14 +19,17 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -40,10 +43,17 @@ class SwiftCompileStep implements Step {
   private final ImmutableMap<String, String> compilerEnvironment;
   private final ImmutableList<String> compilerCommand;
 
+  private final ProjectFilesystem filesystem;
+  private final Optional<AbsPath> argsFile;
+
   SwiftCompileStep(
-      AbsPath compilerCwd,
-      Map<String, String> compilerEnvironment,
-      Iterable<String> compilerCommand) {
+    ProjectFilesystem filesystem,
+    Optional<AbsPath> argsFile,
+    AbsPath compilerCwd,
+    Map<String, String> compilerEnvironment,
+    Iterable<String> compilerCommand) {
+    this.filesystem = filesystem;
+    this.argsFile = argsFile;
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.compilerCommand = ImmutableList.copyOf(compilerCommand);
@@ -54,15 +64,30 @@ class SwiftCompileStep implements Step {
     return "swift compile";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
+  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) throws IOException {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(compilerCwd.getPath());
     builder.setEnvironment(compilerEnvironment);
-    builder.setCommand(
+
+    ImmutableList<String> finalCompilerCommand =
+      ImmutableList.<String>builder()
+        .addAll(compilerCommand)
+        .addAll(getColorArguments(context.getAnsi().isAnsiTerminal()))
+        .build();
+
+    if (argsFile.isPresent()) {
+      filesystem.writeLinesToPath(
+        Iterables.transform(
+          finalCompilerCommand.subList(1, finalCompilerCommand.size()), Escaper.ARGFILE_ESCAPER::apply),
+        argsFile.get().getPath());
+      builder.setCommand(
         ImmutableList.<String>builder()
-            .addAll(compilerCommand)
-            .addAll(getColorArguments(context.getAnsi().isAnsiTerminal()))
+            .add(finalCompilerCommand.get(0))
+            .add("@" + argsFile.get().getPath())
             .build());
+    } else {
+      builder.setCommand(finalCompilerCommand);
+    }
     return builder.build();
   }
 
