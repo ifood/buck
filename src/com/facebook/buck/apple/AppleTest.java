@@ -412,19 +412,21 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
       }
 
-      NSDictionary xctestRunDict = new NSDictionary();
-      xctestRunDict.put("TestBundlePath", new NSString("__TESTROOT__/" + testBundle.getBinaryName() + ".xctest"));
-      xctestRunDict.put("TestHostPath", "__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/xctest");
+      NSDictionary xctestRunDictValue = new NSDictionary();
+      xctestRunDictValue.put("TestBundlePath", new NSString("__TESTROOT__"));
+      xctestRunDictValue.put("TestHostPath", "__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/xctest");
 
       if (testHostAppPath.isPresent()) {
-        xctestRunDict.put("TestHostPath", testHostAppPath.get().toString());
+        xctestRunDictValue.put("TestHostPath", testHostAppPath.get().toString());
         if (isUiTest) {
-          xctestRunDict.put("UITargetAppPath", uiTestTargetAppPath.get().toString());
+          xctestRunDictValue.put("UITargetAppPath", uiTestTargetAppPath.get().toString());
         }
       }
-      String xmlfile = xctestRunDict.toXMLPropertyList();
+      NSDictionary xctestrunKey = new NSDictionary();
+      xctestrunKey.put(testBundle.getBinaryName(), xctestRunDictValue);
+      String xmlfile = xctestrunKey.toXMLPropertyList();
 
-      Path xctestrunPath = resolvedTestOutputPath.resolve("test" + ".xctestrun");
+      Path xctestrunPath = resolvedTestBundleDirectory.resolve("test" + ".xctestrun");
 
       try {
         getProjectFilesystem().writeContentsToPath(
@@ -472,7 +474,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
               snapshotReferenceImagesPath,
-              snapshotImagesDiffPath,
+              Optional.of(resolvedTestBundleDirectory.toString()),
               Optional.of(getProjectFilesystem().resolve(".").toString()));
 
       if (useIdb) {
@@ -532,7 +534,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
       String xmlfile = xctestRunDict.toXMLPropertyList();
 
-      Path xctestrunPath = resolvedTestOutputPath.resolve("test" + ".xctestrun");
+      Path xctestrunPath = resolvedTestBundleDirectory.resolve("test" + ".xctestrun");
 
       try {
         getProjectFilesystem().writeContentsToPath(

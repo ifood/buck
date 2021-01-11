@@ -198,6 +198,7 @@ class XctoolRunTestsStep implements Step {
             logicTestBundlePaths,
             appTestBundleToHostAppPaths,
             appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+            snapshotImagesDiffPath.get(),
             waitForDebugger);
     this.appTestPathsToTestHostAppPathsToTestTargetAppPaths =
         appTestPathsToTestHostAppPathsToTestTargetAppPaths;
@@ -575,16 +576,23 @@ class XctoolRunTestsStep implements Step {
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+      String snapshotdiffpath,
       boolean waitForDebugger) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
+    ImmutableList.Builder<String> argss = ImmutableList.builder();
     args.add(xctoolPath.toString());
+    argss.add("sh /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building");
     args.add("-reporter");
     args.add("json-stream");
     args.add("-sdk", sdkName);
     if (destinationSpecifier.isPresent()) {
-      args.add("-destination");
-      args.add(destinationSpecifier.get());
+      argss.add("-destination");
+      argss.add(destinationSpecifier.get());
     }
+
+    argss.add("-xctestrun");
+    argss.add(snapshotdiffpath + "test.xctestrun");
+    argss.add("| /usr/local/lib/ruby/gems/2.7.0/gems/xcpretty-0.3.0/bin/xcpretty");
     args.add("run-tests");
     for (Path logicTestBundlePath : logicTestBundlePaths) {
       args.add("-logicTest");
@@ -612,7 +620,7 @@ class XctoolRunTestsStep implements Step {
       args.add("-waitForDebugger");
     }
 
-    return args.build();
+    return argss.build();
   }
 
   private static int waitForProcessAndGetExitCode(
